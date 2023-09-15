@@ -99,7 +99,7 @@ def delete_note():
     
     del notes[note_index]
     write_notes(notes)
-    print("Не удалось удалить!")
+    print("Заметка успешно удалена!")
 
 def main():
     while True:
