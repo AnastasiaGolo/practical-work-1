@@ -1,124 +1,128 @@
 #Напишите проект, содержащий функционал работы с заметками. Программа должна уметь создавать заметку, сохранять её,
 #читать список заметок, редактировать заметку, удалять заметку.
 
-class Note:
-    def __init__(self, title, content):
-        self.title = title
-        self.content = content
+import json
+from datetime import datetime
 
+def read_notes():
+    try:
+        with open('notes.json', 'r') as file:
+            notes = json.load(file)
+    except FileNotFoundError:
+        notes = []
+        
+    return notes
 
-class NotesApp:
-    def __init__(self):
-        self.notes = []
+def write_notes(notes):
+    with open('notes.json', 'w') as file:
+        json.dump(notes, file, indent=4)
 
-    def create_note(self, title, content):
-        note = Note(title, content)
-        self.notes.append(note)
+def add_note():
+    notes = read_notes()
+    note_id = len(notes) + 1
+    note_title = input("Введите название заметки: ")
+    note_body = input("Введите текст заметки: ")
+    note_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    note = {
+        "id": note_id,
+        "title": note_title,
+        "body": note_body,
+        "date": note_date
+    }
+    
+    notes.append(note)
+    write_notes(notes)
+    print("Заметка успешно добавлена!")
 
-    def save_notes(self):
-        with open('notes.txt', 'w') as file:
-            for note in self.notes:
-                file.write(f"{note.title}\n")
-                file.write(f"{note.content}\n")
-                file.write("=====\n")
+def show_notes():
+    notes = read_notes()
+    
+    if len(notes) == 0:
+        print("Заметки не найдены.")
+    else:
+        for note in notes:
+            print(f"ID: {note['id']}")
+            print(f"Title: {note['title']}")
+            print(f"Body: {note['body']}")
+            print(f"Date: {note['date']}")
+            print()
+        
+def edit_note():
+    notes = read_notes()
+    
+    if len(notes) == 0:
+        print("Заметки не найдены.")
+        return
+    
+    note_id = int(input("Введите ID заметки, которую вы хотите отредактировать: "))
+    note_index = -1
+    
+    for i in range(len(notes)):
+        if notes[i]['id'] == note_id:
+            note_index = i
+            break
+            
+    if note_index == -1:
+        print("Заметка не найдена.")
+        return
+    
+    note_title = input("Введите название новой заметки: ")
+    note_body = input("Введите текст новой заметки: ")
+    note_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    notes[note_index]['title'] = note_title
+    notes[note_index]['body'] = note_body
+    notes[note_index]['date'] = note_date
+    
+    write_notes(notes)
+    print("Заметка успешно отредактирована!")
 
-    def read_notes(self):
-        with open('notes.txt', 'r') as file:
-            lines = file.readlines()
-            if lines:
-                notes = []
-                title = ''
-                content = ''
-                for line in lines:
-                    if line.startswith("====="):
-                        note = Note(title, content)
-                        notes.append(note)
-                        title = ''
-                        content = ''
-                    elif not title:
-                        title = line.strip()
-                    else:
-                        content += line
-                self.notes = notes
-
-    def edit_note(self, note_index, new_content):
-        if 0 <= note_index < len(self.notes):
-            self.notes[note_index].content = new_content
-
-    def delete_note(self, note_index):
-        if 0 <= note_index < len(self.notes):
-            del self.notes[note_index]
-
+def delete_note():
+    notes = read_notes()
+    
+    if len(notes) == 0:
+        print("Заметки не найдены.")
+        return
+    
+    note_id = int(input("Введите ID заметки, которую вы хотите удалить: "))
+    note_index = -1
+    
+    for i in range(len(notes)):
+        if notes[i]['id'] == note_id:
+            note_index = i
+            break
+            
+    if note_index == -1:
+        print("Заметка не найдена.")
+        return
+    
+    del notes[note_index]
+    write_notes(notes)
+    print("Не удалось удалить!")
 
 def main():
-    app = NotesApp()
-    
     while True:
-        print("1. Create a note")
-        print("2. Read notes")
-        print("3. Edit a note")
-        print("4. Delete a note")
-        print("5. Exit")
+        print("1. Добавить заметку")
+        print("2. Показать все заметки")
+        print("3. Отредактировать заметку")
+        print("4. Удалить заметку")
+        print("5. Выход")
         
-        choice = input("Enter your choice: ")
+        choice = input("Введите свой выбор (1-5): ")
         
         if choice == '1':
-            title = input("Enter note title: ")
-            content = input("Enter note content: ")
-            app.create_note(title, content)
-            print("Note created successfully!")
-        
+            add_note()
         elif choice == '2':
-            app.read_notes()
-            if app.notes:
-                for i, note in enumerate(app.notes):
-                    print(f"{i+1}. {note.title}")
-                    print(note.content)
-                    print()
-            else:
-                print("No notes found.")
-        
+            show_notes()
         elif choice == '3':
-            app.read_notes()
-            if app.notes:
-                for i, note in enumerate(app.notes):
-                    print(f"{i+1}. {note.title}")
-                
-                note_index = int(input("Enter the index of the note to edit: ")) - 1
-                
-                if 0 <= note_index < len(app.notes):
-                    new_content = input("Enter new content: ")
-                    app.edit_note(note_index, new_content)
-                    print("Note edited successfully!")
-                else:
-                    print("Invalid note index.")
-            else:
-                print("No notes found.")
-        
+            edit_note()
         elif choice == '4':
-            app.read_notes()
-            if app.notes:
-                for i, note in enumerate(app.notes):
-                    print(f"{i+1}. {note.title}")
-                
-                note_index = int(input("Enter the index of the note to delete: ")) - 1
-                
-                if 0 <= note_index < len(app.notes):
-                    app.delete_note(note_index)
-                    print("Note deleted successfully!")
-                else:
-                    print("Invalid note index.")
-            else:
-                print("No notes found.")
-        
+            delete_note()
         elif choice == '5':
-            app.save_notes()
-            print("Exiting...")
             break
-        
         else:
-            print("Invalid choice. Please try again.")
-
+            print("Недопустимый выбор. Пожалуйста, повторите ещё раз.")
 
 if __name__ == '__main__':
     main()
